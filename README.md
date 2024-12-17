@@ -28,9 +28,6 @@ Add the `aurora_dsql` driver and specify a region on your database config. The `
     'prefix_indexes' => true,
     'search_path' => 'public',
     'sslmode' => 'prefer',
-    'options'   => array(
-        PDO::ATTR_PERSISTENT => true,
-    ),
 ],
 ```
 
@@ -38,10 +35,12 @@ Add the `aurora_dsql` driver and specify a region on your database config. The `
 Ensure your system is configured with proper AWS credentials.
 
 ### Creating Async Indexes
-DSQL only supports creating indexes with an [ASYNC command](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html). 
+DSQL supports creating standard indexes, but only on table with no data. If the table has data the index must be created with an [ASYNC command](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html). 
 This package provides an `asyncIndex` command to support creating DSQL compatible indexes.
 
 ```php
+use BreezyBeasts\AuroraDsql\Schema\Blueprint; // custom blueprint
+
 Schema::table('users', function (Blueprint $table) {
     $table->asyncIndex(['email'])->unique());
 });
@@ -83,6 +82,83 @@ Schema::table('users', function (Blueprint $table) {
     $table->ulid('id')->primary(); // 💣💥 not supported on alter
 });
 ```
+
+
+### Dropping columns
+At this time DSQL does not support dropping columns. A workaround is to migrate the table or ignore the column.
+
+**Hide the attribute**
+```php
+<?php
+ 
+namespace App\Models;
+ 
+use Illuminate\Database\Eloquent\Model;
+ 
+class Movie extends Model
+{
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<string>
+     */
+    protected $hidden = ['score'];
+}
+```
+
+
+**Create the table**
+```php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+
+    public $withinTransaction = false;
+    
+    public function up(): void
+    {
+        // Step 1: Rename the existing table
+        Schema::rename('movies', 'movies_old');
+
+        // Step 2: Recreate the table without the unwanted column
+        Schema::create('movies', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->integer('score');
+            // Exclude the column you want to drop (e.g., 'genre')
+        });
+
+        // Step 3: Copy the data to the new table
+        DB::statement('INSERT INTO movies (id, title, score) SELECT id, title, score FROM movies_old');
+
+        // Step 4: Drop the old table
+        Schema::dropIfExists('movies_old');
+    }
+
+    public function down(): void
+    {
+        // Reverse the process if needed
+        Schema::rename('movies', 'movies_new');
+
+        Schema::create('movies', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->integer('score');
+            $table->string('genre'); // Re-add the dropped column
+        });
+
+        DB::statement('INSERT INTO movies (id, title, score, genre) SELECT id, title, score, NULL AS genre FROM movies_new');
+
+        Schema::dropIfExists('movies_new');
+    }
+};
+```
+
+
 
 
 

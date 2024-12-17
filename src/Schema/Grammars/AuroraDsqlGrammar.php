@@ -9,6 +9,19 @@ use Illuminate\Support\Fluent;
 class AuroraDsqlGrammar extends PostgresGrammar
 {
 
+    protected function modifyNullable(Blueprint $blueprint, Fluent $column)
+    {
+
+    }
+
+    public function compileDropColumn(\Illuminate\Database\Schema\Blueprint $blueprint, \Illuminate\Support\Fluent $command)
+    {
+        // Throw an exception or log a message to prevent unsupported operations
+        throw new \RuntimeException("Dropping columns is not supported in Aurora DSQL. Consider recreating the table.");
+    }
+
+
+
     public function compileAsyncIndex(Blueprint $blueprint, Fluent $command): string
     {
         $columns = $this->columnize($command->columns);
