@@ -10,7 +10,6 @@ use Illuminate\Support\ServiceProvider;
 
 class AuroraDsqlServiceProvider extends ServiceProvider
 {
-
     public function register(): void
     {
 

@@ -18,6 +18,11 @@ class AuroraDsqlGrammar extends PostgresGrammar
         return false;
     }
 
+    public function supportsSavepoints()
+    {
+        return false;
+    }
+
     protected function modifyNullable(Blueprint $blueprint, Fluent $column)
     {
         // modifiers not supported
