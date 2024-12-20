@@ -8,7 +8,6 @@ use Illuminate\Database\PostgresConnection;
 
 class AuroraDsqlConnection extends PostgresConnection
 {
-
     public function __construct($pdo, $database = '', $tablePrefix = '', array $config = [])
     {
         parent::__construct($pdo, $database, $tablePrefix, $config);
@@ -20,7 +19,7 @@ class AuroraDsqlConnection extends PostgresConnection
     public function getDefaultSchemaGrammar()
     {
         // Return your custom grammar
-        return $this->withTablePrefix(new AuroraDsqlGrammar());
+        return $this->withTablePrefix(new AuroraDsqlGrammar);
     }
 
     public function getSchemaBuilder(): SchemaBuilder

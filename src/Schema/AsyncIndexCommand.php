@@ -6,7 +6,6 @@ use Illuminate\Support\Fluent;
 
 class AsyncIndexCommand extends Fluent
 {
-
     /**
      * Mark the index as unique.
      *
@@ -15,6 +14,7 @@ class AsyncIndexCommand extends Fluent
     public function unique(): static
     {
         $this->attributes['unique'] = true;
+
         return $this;
     }
 
@@ -26,12 +26,14 @@ class AsyncIndexCommand extends Fluent
     public function ifNotExist(): static
     {
         $this->attributes['ifNotExists'] = true;
+
         return $this;
     }
 
     public function includes($columns = []): static
     {
         $this->attributes['includedColumns'] = $columns;
+
         return $this;
     }
 
@@ -43,6 +45,7 @@ class AsyncIndexCommand extends Fluent
     public function nullsFirst(): static
     {
         $this->attributes['nullsPosition'] = 'FIRST';
+
         return $this;
     }
 
@@ -51,11 +54,10 @@ class AsyncIndexCommand extends Fluent
      *
      * @return $this
      */
-
     public function nullsLast(): static
     {
         $this->attributes['nullsPosition'] = 'LAST';
+
         return $this;
     }
-
 }

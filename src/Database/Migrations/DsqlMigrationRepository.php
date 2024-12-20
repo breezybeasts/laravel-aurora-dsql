@@ -1,4 +1,5 @@
 <?php
+
 namespace BreezyBeasts\AuroraDsql\Database\Migrations;
 
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
@@ -21,9 +22,9 @@ class DsqlMigrationRepository extends DatabaseMigrationRepository
     public function log($file, $batch)
     {
         $record = [
-            'id'        => (string) Str::ulid(),
+            'id' => (string) Str::ulid(),
             'migration' => $file,
-            'batch'     => $batch,
+            'batch' => $batch,
         ];
         $this->table()->insert($record);
     }

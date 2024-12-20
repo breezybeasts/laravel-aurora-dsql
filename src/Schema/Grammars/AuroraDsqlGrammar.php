@@ -5,22 +5,29 @@ namespace BreezyBeasts\AuroraDsql\Schema\Grammars;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Fluent;
+use RuntimeException;
 
 class AuroraDsqlGrammar extends PostgresGrammar
 {
+    /**
+     * While DSQL does support transaction running migrations in transactions causes many issue
+     * To work as seamless as possible default to false here
+     */
+    public function supportsSchemaTransactions(): bool
+    {
+        return false;
+    }
 
     protected function modifyNullable(Blueprint $blueprint, Fluent $column)
     {
-
+        // modifiers not supported
     }
 
     public function compileDropColumn(\Illuminate\Database\Schema\Blueprint $blueprint, \Illuminate\Support\Fluent $command)
     {
         // Throw an exception or log a message to prevent unsupported operations
-        throw new \RuntimeException("Dropping columns is not supported in Aurora DSQL. Consider recreating the table.");
+        throw new \RuntimeException('Dropping columns is not supported in Aurora DSQL. Consider recreating and migrating the table or hide columns.');
     }
-
-
 
     public function compileAsyncIndex(Blueprint $blueprint, Fluent $command): string
     {
@@ -28,7 +35,7 @@ class AuroraDsqlGrammar extends PostgresGrammar
         $includedColumns = $this->columnize($command->includedColumns);
         $ifNotExists = $command->ifNotExists ? 'IF NOT EXISTS ' : '';
         $unique = $command->unique ? 'UNIQUE ' : '';
-        $includedColumns = !empty($command->includedColumns) ? "INCLUDE ({$includedColumns}) " : '';
+        $includedColumns = ! empty($command->includedColumns) ? "INCLUDE ({$includedColumns}) " : '';
         $nullsPosition = $command->nullsPosition ? " NULLS {$command->nullsPosition}" : '';
 
         return sprintf(
@@ -43,13 +50,13 @@ class AuroraDsqlGrammar extends PostgresGrammar
         );
     }
 
-
     protected function compilePrimaryKey(\Illuminate\Database\Schema\Blueprint $blueprint): string
     {
         $primaryKeys = $blueprint->getPrimaryKeys();
 
-        if (!empty($primaryKeys)) {
+        if (! empty($primaryKeys)) {
             $columns = implode(', ', array_map([$this, 'wrap'], $primaryKeys));
+
             return sprintf(', PRIMARY KEY (%s)', $columns);
         }
 
@@ -62,6 +69,7 @@ class AuroraDsqlGrammar extends PostgresGrammar
 
         $compiledKeys = array_map(function ($uniqueKey) {
             $columns = implode(', ', array_map([$this, 'wrap'], $uniqueKey['columns']));
+
             return sprintf(', UNIQUE (%s)', $columns);
         }, $uniqueKeys);
 
@@ -84,5 +92,85 @@ class AuroraDsqlGrammar extends PostgresGrammar
         );
     }
 
+    /**
+     * Create the column definition for an integer type.
+     *
+     * @return string
+     */
+    protected function typeInteger(Fluent $column)
+    {
+        return 'integer';
+    }
 
+    /**
+     * Create the column definition for a big integer type.
+     *
+     * @return string
+     */
+    protected function typeBigInteger(Fluent $column)
+    {
+        return 'bigint';
+    }
+
+    /**
+     * Create the column definition for a small integer type.
+     *
+     * @return string
+     */
+    protected function typeSmallInteger(Fluent $column)
+    {
+        return 'smallint';
+    }
+
+    /**
+     * Create the column definition for an enumeration type.
+     *
+     * @return string
+     */
+    protected function typeEnum(Fluent $column)
+    {
+        throw new RuntimeException('This database driver does not support the enum type.');
+    }
+
+    /**
+     * Create the column definition for a vector type.
+     *
+     * @return string
+     *
+     * @throws \RuntimeException
+     */
+    protected function typeVector(Fluent $column)
+    {
+        throw new RuntimeException('This database driver does not support the vector type.');
+    }
+
+    /**
+     * Create the column definition for a spatial Geography type.
+     *
+     * @return string
+     */
+    protected function typeGeography(Fluent $column)
+    {
+        throw new RuntimeException('This database driver does not support the geography type.');
+    }
+
+    /**
+     * Create the column definition for a MAC address type.
+     *
+     * @return string
+     */
+    protected function typeMacAddress(Fluent $column)
+    {
+        throw new RuntimeException('This database driver does not support the macaddr type.');
+    }
+
+    /**
+     * Create the column definition for an IP address type.
+     *
+     * @return string
+     */
+    protected function typeIpAddress(Fluent $column)
+    {
+        throw new RuntimeException('This database driver does not support the inet type.');
+    }
 }

@@ -8,7 +8,7 @@ Laravel Driver Support for Amazon Aurora DSQL
 ```shell
 composer require breezybeasts/laravel-aurora-dsql
 ```
-
+🤝
 ## Usage
 Add the `aurora_dsql` driver and specify a region on your database config. The `aurora_dsql` driver trys to stay true to the default `pgsql` driver as possible.
 
