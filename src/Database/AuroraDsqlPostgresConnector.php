@@ -2,16 +2,24 @@
 
 namespace BreezyBeasts\AuroraDsql\Database;
 
-use Aws\Credentials\CredentialProvider;
-use Aws\Signature\SignatureV4;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Uri;
+use BreezyBeasts\AuroraDsql\Helpers;
 use Illuminate\Database\Connectors\PostgresConnector;
 use Illuminate\Support\Arr;
 use PDO;
 
 class AuroraDsqlPostgresConnector extends PostgresConnector
 {
+    /**
+     * Creates a database connection using the provided DSN, configuration, and options.
+     *
+     * @param  string  $dsn  The Data Source Name for the database connection
+     * @param  array  $config  The configuration array containing region and other connection details
+     * @param  array  $options  Additional options for establishing the connection
+     * @return PDO A PDO instance representing the database connection
+     *
+     * @throws InvalidArgumentException if the 'region' key is missing in the configuration array
+     * @throws \Exception
+     */
     public function createConnection($dsn, array $config, array $options): PDO
     {
         if (! array_key_exists('region', $config)) {
@@ -19,43 +27,10 @@ class AuroraDsqlPostgresConnector extends PostgresConnector
         }
 
         $ttl = Arr::get($config, 'expires', '+15 min');
-        $token = $this->generateDsqlAuthToken($config['host'], $config['region'], $ttl);
+        $token = Helpers::generateDsqlAuthToken($config['host'], $config['region'], $ttl);
 
         $config['password'] = $token;
 
         return parent::createConnection($dsn, $config, $options);
-    }
-
-    protected function generateDsqlAuthToken($hostname, $region, $ttl): string
-    {
-
-        $hostname = trim($hostname);
-        $region = trim($region);
-        if (empty($hostname)) {
-            throw new \InvalidArgumentException('Hostname must not be empty for Aurora DSQL.');
-        }
-
-        if (empty($region)) {
-            throw new \InvalidArgumentException('Region must not be empty for Aurora DSQL.');
-        }
-
-        $provider = CredentialProvider::defaultProvider();
-
-        $credentials = $provider()->wait();
-
-        $base_uri = (new Uri)->withScheme('https')
-            ->withHost($hostname)
-            ->withQuery(http_build_query(['Action' => 'DbConnectAdmin']));
-
-        $request = new Request('GET', $base_uri);
-        $signer = new SignatureV4('dsql', $region);
-        $presignedRequest = $signer->presign($request, $credentials, $ttl);
-        $presignedUrl = (string) $presignedRequest->getUri();
-
-        // Return everything after "https://"
-        $token = substr($presignedUrl, strlen('https://'));
-
-        return $token;
-
     }
 }

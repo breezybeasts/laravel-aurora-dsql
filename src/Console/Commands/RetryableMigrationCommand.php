@@ -14,7 +14,10 @@ class RetryableMigrationCommand extends MigrateCommand
         $this->migrator->withinTransaction = false;
     }
 
-    protected function runMigrations()
+    /**
+     * Runs migrations with retry logic.
+     */
+    protected function runMigrations(): mixed
     {
         return retry(5,
             fn () => parent::runMigrations(),
@@ -22,6 +25,12 @@ class RetryableMigrationCommand extends MigrateCommand
             fn ($e) => $this->isDsqlSerializationError($e));
     }
 
+    /**
+     * Check if the provided exception represents a DSQL Serialization error based on specific conditions.
+     *
+     * @param  Exception  $e  The exception to check
+     * @return bool Whether the exception represents a DSQL Serialization error
+     */
     private function isDsqlSerializationError($e): bool
     {
         $connection = $this->migrator->resolveConnection($this->option('database'));

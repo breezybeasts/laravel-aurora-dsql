@@ -2,7 +2,7 @@
 
 namespace BreezyBeasts\AuroraDsql\Schema;
 
-use Illuminate\Database\Schema\ForeignIdColumnDefinition;
+use http\Exception\RuntimeException;
 
 class Blueprint extends \Illuminate\Database\Schema\Blueprint
 {
@@ -18,21 +18,41 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
      */
     public function id($column = 'id')
     {
-        return $this->uuid($column);
+        return match (config('auora_dsql.migrations.id')) {
+            'uuid' => parent::uuid($column),
+            'ulid' => parent::ulid($column),
+            default => parent::id($column),
+        };
     }
 
-    /**
-     * Create a new UUID column on the table.
-     *
-     * @param  string  $column
-     * @return \Illuminate\Database\Schema\ForeignIdColumnDefinition
-     */
-    public function foreignId($column)
+    public function increments($column)
     {
-        return $this->addColumnDefinition(new ForeignIdColumnDefinition($this, [
-            'type' => 'uuid',
-            'name' => $column,
-        ]));
+        throw new RuntimeException('Auto increments are not supported.');
+    }
+
+    public function bigIncrements($column)
+    {
+        throw new RuntimeException('Auto increments are not supported.');
+    }
+
+    public function mediumIncrements($column)
+    {
+        throw new RuntimeException('Auto increments are not supported.');
+    }
+
+    public function smallIncrements($column)
+    {
+        throw new RuntimeException('Auto increments are not supported.');
+    }
+
+    public function tinyIncrements($column)
+    {
+        throw new RuntimeException('Auto increments are not supported.');
+    }
+
+    public function integerIncrements($column)
+    {
+        throw new RuntimeException('Auto increments are not supported.');
     }
 
     public function asyncIndex($columns, $indexName = null)

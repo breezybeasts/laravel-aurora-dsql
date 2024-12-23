@@ -2,6 +2,7 @@
 
 namespace BreezyBeasts\AuroraDsql\Providers;
 
+use BreezyBeasts\AuroraDsql\Console\Commands\DsqlToken;
 use BreezyBeasts\AuroraDsql\Console\Commands\RetryableMigrationCommand;
 use BreezyBeasts\AuroraDsql\Database\AuroraDsqlConnection;
 use BreezyBeasts\AuroraDsql\Database\AuroraDsqlPostgresConnector;
@@ -12,7 +13,6 @@ class AuroraDsqlServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-
         $this->app->resolving('db', function ($db) {
             $db->extend('aurora_dsql', function ($config, $name) {
                 $config['name'] = $name;
@@ -28,8 +28,20 @@ class AuroraDsqlServiceProvider extends ServiceProvider
             return new DsqlMigrationRepository($app['db'], $app['config']['database.migrations.table']);
         });
 
-        // Replace the default migrate command
+        $this->mergeConfigFrom(__DIR__.'/../config/auora_dsql.php', 'auora_dsql');
+
+    }
+
+    public function boot()
+    {
+        $this->publishes([
+            __DIR__.'/../config/auora_dsql.php' => config_path('auora_dsql.php'),
+        ], 'laravel-aurora-dsql-config');
+
         if ($this->app->runningInConsole()) {
+
+            // Replace the default migrate command
+
             $this->app->singleton('command.migrate', function ($app) {
                 return new RetryableMigrationCommand(
                     $app['migrator'],
@@ -39,6 +51,7 @@ class AuroraDsqlServiceProvider extends ServiceProvider
 
             $this->commands([
                 'command.migrate',
+                DsqlToken::class,
             ]);
         }
 

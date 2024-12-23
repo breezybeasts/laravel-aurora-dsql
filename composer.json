@@ -14,6 +14,7 @@
     "illuminate/support": "^10.0|^11.0",
     "illuminate/database": "^10.0|^11.0",
     "illuminate/cache": "^10|^11",
+    "illuminate/console": "^10|^11",
     "aws/aws-sdk-php": "^3.0",
     "ext-pdo": "*"
   },

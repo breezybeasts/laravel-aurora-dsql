@@ -8,6 +8,24 @@ Laravel Driver Support for Amazon Aurora DSQL
 ```shell
 composer require breezybeasts/laravel-aurora-dsql
 ```
+
+You can publish the config file with:
+```shell
+php artisan vendor:publish --tag="laravel-aurora-dsql-config"
+```
+
+This is the contents of the published config file:
+```php
+return [
+    'migrations' => [
+        'id' => 'uuid', // uuid, ulid, id
+        'retries' => 5, // Handles OCC conflicts 
+    ],
+];
+
+
+```
+
 🤝
 ## Usage
 Add the `aurora_dsql` driver and specify a region on your database config. The `aurora_dsql` driver trys to stay true to the default `pgsql` driver as possible.
@@ -159,7 +177,34 @@ return new class extends Migration
 ```
 
 
+## Models
+Because Aurora DSQL does not support serial and DSQL overrides the id() blueprint to use a UUID or ULID
+your models will most likely need to include the trait `HasUuids` or `HasUlids`.
 
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+//use Illuminate\Database\Eloquent\Concerns\HasUlids;
+
+class User extends Authenticatable
+{ 
+    use HasUuids; // or HasUlids
+    
+    // ....
+    
+}
+
+```
+
+It is entirely possible you don't want this if your application still wants to maintain an id based on an integer value.
+
+
+
+Compromises/Issue
+- prepared statements are globally disabled
 
 
 
