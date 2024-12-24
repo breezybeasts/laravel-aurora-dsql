@@ -27,7 +27,7 @@ class AuroraDsqlPostgresConnector extends PostgresConnector
         }
 
         $ttl = Arr::get($config, 'expires', '+15 min');
-        $token = Helpers::generateDsqlAuthToken($config['host'], $config['region'], $ttl);
+        $token = Helpers::generateDsqlAuthToken($config['username'], $config['host'], $config['region'], $ttl);
 
         $config['password'] = $token;
 

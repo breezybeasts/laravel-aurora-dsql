@@ -17,7 +17,7 @@ class Helpers
      * @param  int  $ttl  The time-to-live for the pre-signed URL.
      * @return string The pre-signed URL for Aurora DSQL authentication.
      */
-    public static function generateDsqlAuthToken($hostname, $region, $ttl): string
+    public static function generateDsqlAuthToken($username, $hostname, $region, $ttl): string
     {
 
         $hostname = trim($hostname);
@@ -31,12 +31,17 @@ class Helpers
         }
 
         $provider = CredentialProvider::defaultProvider();
-
         $credentials = $provider()->wait();
+
+        if ($username == 'admin') {
+            $action = 'DbConnectAdmin';
+        } else {
+            $action = 'DbConnect';
+        }
 
         $base_uri = (new Uri)->withScheme('https')
             ->withHost($hostname)
-            ->withQuery(http_build_query(['Action' => 'DbConnectAdmin']));
+            ->withQuery(http_build_query(['Action' => $action]));
 
         $request = new Request('GET', $base_uri);
         $signer = new SignatureV4('dsql', $region);
